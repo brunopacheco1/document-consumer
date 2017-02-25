@@ -11,7 +11,7 @@ import org.apache.spark.SparkConf
 
 object DocumentConsumer {
   def main(args: Array[String]): Unit = {
-    val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("spark://casa-Lenovo:7077")
+    val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
 
     val ssc = new StreamingContext(sparkConf, Seconds(60))
 
@@ -29,6 +29,6 @@ object DocumentConsumer {
       PreferConsistent,
       Subscribe[String, String](topics, kafkaParams))
 
-    stream.map(record => (record.key, record.value)).print()
+    stream.map(record => (record.key, record.value))
   }
 }
