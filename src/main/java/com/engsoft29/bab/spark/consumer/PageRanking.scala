@@ -29,11 +29,5 @@ object PageRanking {
     val rankByVertices = vertices.join(ranks).map(el => Map("id" -> el._2._1, "pagerank" -> el._2._2))
     
     EsSpark.saveToEs(rankByVertices, "documents/document", Map("es.mapping.id" -> "id"))
-    
-//    rankByVertices.collect().foreach(println)
-
-    /*val documentRanked = documents.join(rankByVertices).map(el => el._2).map(el => el._1 ++ Map("pagerank" -> el._2))
-
-    EsSpark.saveToEs(documentRanked, "documents/document", Map("es.mapping.id" -> "id"))*/
   }
 }
