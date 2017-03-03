@@ -38,11 +38,8 @@ object DocumentKinesisConsumer {
     md.digest(inputStr.getBytes()).map(0xFF & _).map { "%02x".format(_) }.foldLeft("") { _ + _ }
   }
 
-  def main(args: Array[String]): Unit = {
-    System.setProperty("aws.accessKeyId", "AKIAIMA4TRYVHVLOPMAQ")
-		System.setProperty("aws.secretKey", "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")
-    
-		val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
+  def main(args: Array[String]): Unit = {    
+	val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
 
     val sc = new SparkContext(sparkConf)
 
