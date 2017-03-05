@@ -27,10 +27,11 @@ object DocumentKinesisConsumer {
     implicit val modelFormat = jsonFormat3(Model)
     val json = jsonStr.parseJson.convertTo[Model]
     val summary = json.document.subSequence(0, Math.min(json.document.length(), 150))
-
+    val id = hash(json.url)
+    println(id)
     val pagerank = 0d
 
-    Map("id" -> hash(json.url), "url" -> json.url, "summary" -> summary, "children" -> json.urls.map(el => hash(el)), "pagerank" -> pagerank)
+    Map("id" -> id, "url" -> json.url, "summary" -> summary, "document" -> json.document, "children" -> json.urls.map(el => hash(el)), "pagerank" -> pagerank)
   }
 
   private def hash(inputStr: String): String = {
@@ -38,16 +39,16 @@ object DocumentKinesisConsumer {
     md.digest(inputStr.getBytes()).map(0xFF & _).map { "%02x".format(_) }.foldLeft("") { _ + _ }
   }
 
-  def main(args: Array[String]): Unit = {    
-	val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
+  def main(args: Array[String]): Unit = {
+    val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
 
     val sc = new SparkContext(sparkConf)
 
     val ssc = new StreamingContext(sc, Seconds(2))
 
     val credentials = new DefaultAWSCredentialsProviderChain().getCredentials()
-    
-     val kinesisStreams = (0 until 1).map { i =>
+
+    val kinesisStreams = (0 until 1).map { i =>
       KinesisUtils.createStream(ssc, "bab-search-engine-consumer", "bab-search-engine", "kinesis.us-east-1.amazonaws.com", "us-east-1",
         InitialPositionInStream.LATEST, Milliseconds(2000), StorageLevel.MEMORY_ONLY)
     }
