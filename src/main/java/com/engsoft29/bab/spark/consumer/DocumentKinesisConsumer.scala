@@ -23,15 +23,15 @@ import org.apache.spark.streaming.Milliseconds
 object DocumentKinesisConsumer {
 
   private def buildResult(jsonStr: String): Map[String, Any] = {
-    case class Model(url: String, document: String, urls: Array[String])
-    implicit val modelFormat = jsonFormat3(Model)
+    case class Model(url: String, title: String, document: String, urls: Array[String])
+    implicit val modelFormat = jsonFormat4(Model)
     val json = jsonStr.parseJson.convertTo[Model]
-    val summary = json.document.subSequence(0, Math.min(json.document.length(), 150))
+    val summary = json.document.substring(0, Math.min(json.document.length(), 150)) + "..."
     val id = hash(json.url)
     println(id)
     val pagerank = 0d
 
-    Map("id" -> id, "url" -> json.url, "summary" -> summary, "document" -> json.document, "children" -> json.urls.map(el => hash(el)), "pagerank" -> pagerank)
+    Map("id" -> id, "url" -> json.url, "title" -> json.title, "summary" -> summary, "document" -> json.document, "children" -> json.urls.map(el => hash(el)), "pagerank" -> pagerank)
   }
 
   private def hash(inputStr: String): String = {
