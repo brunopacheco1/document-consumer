@@ -40,8 +40,6 @@ object DocumentKinesisConsumer {
   }
 
   def main(args: Array[String]): Unit = {
-    System.setProperty("aws.accessKeyId", "AKIAJZ3WIK7OJB3Q7PFA")
-    System.setProperty("aws.secretKey", "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")
     val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
 
     val sc = new SparkContext(sparkConf)
