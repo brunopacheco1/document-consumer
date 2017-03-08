@@ -23,15 +23,15 @@ import org.apache.spark.streaming.Milliseconds
 object DocumentKinesisConsumer {
 
   private def buildResult(jsonStr: String): Map[String, Any] = {
-    case class Model(url: String, title: String, document: String, urls: Array[String])
-    implicit val modelFormat = jsonFormat4(Model)
+    case class Model(url: String, title: String, document: String, documentType: String, urls: Array[String])
+    implicit val modelFormat = jsonFormat5(Model)
     val json = jsonStr.parseJson.convertTo[Model]
-    val summary = json.document.substring(0, Math.min(json.document.length(), 150)) + "..."
+    val summary = json.document.substring(0, Math.min(json.document.length(), 150)).replaceAll("<.?>", "").replaceAll("\r", "").replaceAll("\n", "").replaceAll("\t", " ") + "..."
     val id = hash(json.url)
     println(id)
     val pagerank = 0d
 
-    Map("id" -> id, "url" -> json.url, "title" -> json.title, "summary" -> summary, "document" -> json.document, "children" -> json.urls.map(el => hash(el)), "pagerank" -> pagerank)
+    Map("id" -> id, "url" -> json.url, "title" -> json.title, "summary" -> summary, "documentType" -> json.documentType, "document" -> json.document, "children" -> json.urls.map(el => hash(el)), "pagerank" -> pagerank)
   }
 
   private def hash(inputStr: String): String = {
@@ -40,6 +40,8 @@ object DocumentKinesisConsumer {
   }
 
   def main(args: Array[String]): Unit = {
+    System.setProperty("aws.accessKeyId", "AKIAJZ3WIK7OJB3Q7PFA")
+    System.setProperty("aws.secretKey", "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")
     val sparkConf = new SparkConf().setAppName("DocumentConsumer").setMaster("local[*]")
 
     val sc = new SparkContext(sparkConf)
