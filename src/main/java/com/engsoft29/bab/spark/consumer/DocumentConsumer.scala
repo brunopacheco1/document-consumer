@@ -20,7 +20,7 @@ import org.apache.spark.streaming.kinesis.KinesisUtils
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.Milliseconds
 
-object DocumentKinesisConsumer {
+object DocumentConsumer {
 
   private def buildResult(jsonStr: String): Map[String, Any] = {
     case class Model(url: String, title: String, document: String, documentType: String, urls: Array[String])

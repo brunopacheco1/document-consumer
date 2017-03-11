@@ -10,24 +10,34 @@ import org.apache.spark.graphx.VertexId
 import org.apache.spark.rdd.RDD
 import org.elasticsearch.spark.rdd.EsSpark
 import org.elasticsearch.spark.sparkContextFunctions
+import org.apache.spark.sql.SparkSession
 
-object PageRanking {
+object HivePageRanking {
   def main(args: Array[String]): Unit = {
-    val sc = new SparkContext(new SparkConf().set("es.write.operation","upsert").setAppName("PageRanking").setMaster("local[*]"))
+    val config = new SparkConf().set("es.write.operation", "upsert").setAppName("HivePageRanking").setMaster("local[*]")
 
-    val documents = sc.esRDD("documents/document", Map[String, String]("es.read.field.include" -> "id,children,pagerank")).map(kv => kv._2)
+    val warehouseLocation = "file:${system:user.dir}/spark-warehouse"
+
+    val spark = SparkSession
+      .builder
+      .config(config)
+      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .enableHiveSupport()
+      .getOrCreate()
+
+    val relationships = spark.sql("SELECT father, child FROM relationship").dropDuplicates().rdd.map(row => (row(0).toString, row(1).toString))
+    
+    val documents = relationships.groupByKey()
     
     println("Total de documentos: " + documents.count())
     
-    val filteredDocuments = documents.filter(value => value.contains("children") && value("children").asInstanceOf[Buffer[String]].length > 0).flatMap(val2 => val2("children").asInstanceOf[Buffer[String]].map(child => (val2("id").asInstanceOf[String], child)))
-
-    val edges: RDD[(VertexId, VertexId)] = filteredDocuments.map(el => (MurmurHash3.stringHash(el._1), MurmurHash3.stringHash(el._2)))
+    val edges: RDD[(VertexId, VertexId)] = relationships.map(line => (MurmurHash3.stringHash(line._1), MurmurHash3.stringHash(line._2)))
 
     val graph = Graph.fromEdgeTuples(edges, 1)
 
     val ranks = graph.pageRank(0.0001).vertices
 
-    val vertices = documents.map(value => (MurmurHash3.stringHash(value("id").toString()).asInstanceOf[org.apache.spark.graphx.VertexId], value("id").toString()))
+    val vertices = documents.map(value => (MurmurHash3.stringHash(value._1).asInstanceOf[org.apache.spark.graphx.VertexId], value._1))
     
     val rankByVertices = vertices.join(ranks).map(el => Map("id" -> el._2._1, "pagerank" -> el._2._2)).filter(value => value("pagerank") != null && value("pagerank").toString.toDouble > 0)
     

@@ -13,15 +13,20 @@ import org.elasticsearch.spark.sparkContextFunctions
 object DocumentRelationshipReader {
   def main(args: Array[String]): Unit = {
     val config = new SparkConf().setAppName("DocumentRelationshipReader").setMaster("local[*]");
-    val spark = SparkSession.builder().config(config).getOrCreate()
 
-    val schema = StructType(Array[StructField](StructField("father", StringType, nullable = false), StructField("child", StringType, nullable = false)))
+    val warehouseLocation = "file:${system:user.dir}/spark-warehouse"
 
-    val relationshipDF = spark.read.parquet("spark-warehouse/relationship")
+    val spark = SparkSession
+      .builder
+      .config(config)
+      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .enableHiveSupport()
+      .getOrCreate()
+
+    val result = spark.sql("SELECT * FROM relationship")
+
+    println(result.count())
     
-    println(relationshipDF.count())
-    
-    val result2 = relationshipDF.dropDuplicates()
-    println(result2.count())
+    println(result.dropDuplicates().count())
   }
 }

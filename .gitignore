@@ -6,3 +6,5 @@
 /.tern-project
 /.cache-main
 /spark-warehouse
+/metastore_db
+/derby.log
