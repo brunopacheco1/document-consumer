@@ -13,6 +13,8 @@ import org.elasticsearch.spark.sparkContextFunctions
 
 object PageRanking {
   def main(args: Array[String]): Unit = {
+    val time = System.currentTimeMillis()
+    
     val sc = new SparkContext(new SparkConf().set("es.write.operation","upsert").setAppName("PageRanking").setMaster("local[*]"))
 
     val documents = sc.esRDD("documents/document", Map[String, String]("es.read.field.include" -> "id,children,pagerank")).map(kv => kv._2)
@@ -36,5 +38,7 @@ object PageRanking {
     println("Total de documentos rankeados: " + rankByVertices.count())
     
     EsSpark.saveToEs(rankByVertices, "documents/document", Map("es.mapping.id" -> "id"))
+    
+    println("FIM --> " + (System.currentTimeMillis() - time))
   }
 }
