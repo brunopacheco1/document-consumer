@@ -23,6 +23,8 @@ object PageRanking {
 
     val edges: RDD[(VertexId, VertexId)] = filteredDocuments.map(el => (MurmurHash3.stringHash(el._1), MurmurHash3.stringHash(el._2)))
 
+    println("Total de relacionamentos: " + edges.count())
+    
     val graph = Graph.fromEdgeTuples(edges, 1)
 
     val ranks = graph.pageRank(0.0001).vertices
