@@ -16,10 +16,8 @@ object PageRanking {
     val time = System.currentTimeMillis()
     
     val sc = new SparkContext(new SparkConf().set("es.write.operation","upsert").setAppName("PageRanking").setMaster("local[*]"))
-
-    val documents = sc.esRDD("documents/document", Map[String, String]("es.read.field.include" -> "id,children,pagerank")).map(kv => kv._2)
     
-    println("Total de documentos: " + documents.count())
+    val documents = sc.esRDD("documents/document", Map[String, String]("es.read.field.include" -> "id,children,pagerank")).map(kv => kv._2)
     
     val filteredDocuments = documents.filter(value => value.contains("children") && value("children").asInstanceOf[Buffer[String]].length > 0).flatMap(val2 => val2("children").asInstanceOf[Buffer[String]].map(child => (val2("id").asInstanceOf[String], child)))
 
@@ -39,6 +37,6 @@ object PageRanking {
     
     EsSpark.saveToEs(rankByVertices, "documents/document", Map("es.mapping.id" -> "id"))
     
-    println("FIM --> " + (System.currentTimeMillis() - time))
+    println("Tempo total gasto: " + (System.currentTimeMillis() - time) + "ms")
   }
 }
