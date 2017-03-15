@@ -14,7 +14,7 @@ object NoGraphxPageRanking {
     
     val iters = 10
     val ctx = new SparkContext(sparkConf)
-    val lines = ctx.textFile("relationship.txt", 1)
+    val lines = ctx.textFile("relationship.txt")
     
     println("Total de relacionamentos: " + lines.count())
     
