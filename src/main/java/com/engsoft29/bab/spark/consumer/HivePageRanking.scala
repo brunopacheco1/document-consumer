@@ -14,6 +14,8 @@ import org.apache.spark.sql.SparkSession
 
 object HivePageRanking {
   def main(args: Array[String]): Unit = {
+    val time = System.currentTimeMillis()
+      
     val config = new SparkConf().set("es.write.operation", "upsert").setAppName("HivePageRanking").setMaster("local[*]")
 
     val warehouseLocation = "file:${system:user.dir}/spark-warehouse"
@@ -29,9 +31,9 @@ object HivePageRanking {
     
     val documents = relationships.groupByKey()
     
-    println("Total de documentos: " + documents.count())
-    
     val edges: RDD[(VertexId, VertexId)] = relationships.map(line => (MurmurHash3.stringHash(line._1), MurmurHash3.stringHash(line._2)))
+    
+    println("Total de relacionamentos: " + edges.count())
 
     val graph = Graph.fromEdgeTuples(edges, 1)
 
@@ -44,5 +46,7 @@ object HivePageRanking {
     println("Total de documentos rankeados: " + rankByVertices.count())
     
     EsSpark.saveToEs(rankByVertices, "documents/document", Map("es.mapping.id" -> "id"))
+    
+    println("Tempo total gasto: " + (System.currentTimeMillis() - time) + "ms")
   }
 }
